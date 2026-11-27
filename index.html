@@ -17,15 +17,133 @@
     .card {
       background: #ffffff;
       border-radius: 12px;
-      padding: 16px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      max-width: 420px;
+      margin: 0 auto;
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
+      box-sizing: border-box;
+    }
+    button {
+      background-color: #0284c7;
+      color: white;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .logout-btn {
+      background-color: #64748b;
+      margin-bottom: 16px;
+    }
+    .item {
+      border-top: 1px solid #e2e8f0;
+      padding: 10px 0;
     }
   </style>
 </head>
 <body>
   <div class="card">
-    <h1>Monitoring Proyek & Gudang</h1>
-    <p>PWA aktif di repository Monitoring-project-.</p>
+    <h2>Monitoring Proyek & Gudang</h2>
+
+    <div id="auth-section">
+      <input type="email" id="email" placeholder="Email" />
+      <input type="password" id="password" placeholder="Password" />
+      <button onclick="login()">Masuk</button>
+    </div>
+
+    <div id="app-section" style="display:none;">
+      <button class="logout-btn" onclick="logout()">Keluar</button>
+
+      <h3>Tambah Data Proyek / Gudang</h3>
+      <input type="text" id="nama-item" placeholder="Nama Proyek / Barang Gudang" />
+      <input type="text" id="status-item" placeholder="Status / Jumlah Stok" />
+      <button onclick="tambahData()">Simpan Data</button>
+
+      <h3>Daftar Data</h3>
+      <div id="daftar-data">Memuat data...</div>
+    </div>
   </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBRg3mhNd5VShZUi6zXWL7iEFTSGNcDyvs",
+      authDomain: "monitoring-project-60ba2.firebaseapp.com",
+      projectId: "monitoring-project-60ba2",
+      storageBucket: "monitoring-project-60ba2.firebasestorage.app",
+      messagingSenderId: "520237178818",
+      appId: "1:520237178818:web:2d78d7c01440aa473c005b",
+      measurementId: "G-RHCLQ5HF8D"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    function login() {
+      const email = document.getElementById('email').value;
+      const pass = document.getElementById('password').value;
+      auth.signInWithEmailAndPassword(email, pass)
+        .catch(err => alert(err.message));
+    }
+
+    function logout() {
+      auth.signOut();
+    }
+
+    function tambahData() {
+      const nama = document.getElementById('nama-item').value.trim();
+      const status = document.getElementById('status-item').value.trim();
+      if (!nama || !status) {
+        alert("Isi nama dan status/stok dulu ya.");
+        return;
+      }
+      db.collection("monitoring").add({
+        nama: nama,
+        status: status,
+        dibuatPada: new Date()
+      }).then(() => {
+        document.getElementById('nama-item').value = "";
+        document.getElementById('status-item').value = "";
+      }).catch(err => alert(err.message));
+    }
+
+    function muatData() {
+      db.collection("monitoring").orderBy("dibuatPada", "desc")
+        .onSnapshot(snapshot => {
+          const wadah = document.getElementById('daftar-data');
+          if (snapshot.empty) {
+            wadah.innerHTML = "<p>Belum ada data.</p>";
+            return;
+          }
+          let html = "";
+          snapshot.forEach(doc => {
+            const d = doc.data();
+            html += `<div class="item"><strong>${d.nama}</strong><br/><small>${d.status}</small></div>`;
+          });
+          wadah.innerHTML = html;
+        });
+    }
+
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        document.getElementById('auth-section').style.display = 'none';
+        document.getElementById('app-section').style.display = 'block';
+        muatData();
+      } else {
+        document.getElementById('auth-section').style.display = 'block';
+        document.getElementById('app-section').style.display = 'none';
+      }
+    });
+  </script>
 </body>
 </html>
