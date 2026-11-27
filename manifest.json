@@ -1,0 +1,10 @@
+{
+  "name": "Monitoring Proyek & Gudang",
+  "short_name": "Monitoring",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0f172a",
+  "description": "Aplikasi PWA manajemen proyek dan gudang berbasis Firebase"
+}
